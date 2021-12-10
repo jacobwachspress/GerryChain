@@ -3,24 +3,21 @@ from networkx.algorithms import tree
 
 from .random import random
 from collections import deque, namedtuple
-from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from gerrychain.graph.graph import Graph
-    from networkx.classes.graph import Graph
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union
+from networkx.classes.graph import Graph
 
 
-def predecessors(h: Union[Graph, Graph], root: Union[int, Tuple[int, int]]
+def predecessors(h: Graph, root: Union[int, Tuple[int, int]]
                  ) -> Union[Dict[int, int], Dict[Tuple[int, int], Tuple[int, int]]]:
     return {a: b for a, b in nx.bfs_predecessors(h, root)}
 
 
-def successors(h: Union[Graph, Graph], root: Union[int, Tuple[int, int]]
+def successors(h: Graph, root: Union[int, Tuple[int, int]]
                ) -> Union[Dict[Tuple[int, int], List[Tuple[int, int]]], Dict[int, List[int]]]:
     return {a: b for a, b in nx.bfs_successors(h, root)}
 
 
-def random_spanning_tree(graph: Union[Graph, Graph]) -> Union[Graph, Graph]:
+def random_spanning_tree(graph: Graph) -> Graph:
     """ Builds a spanning tree chosen by Kruskal's method using random weights.
         :param graph: Networkx Graph
 
@@ -70,7 +67,7 @@ def uniform_spanning_tree(graph, choice=random.choice):
 
 
 class PopulatedGraph:
-    def __init__(self, graph: Union[Graph, Graph], populations: Union[Dict[Tuple[int,
+    def __init__(self, graph: Graph, populations: Union[Dict[Tuple[int,
                  int], int], Dict[int, int]], ideal_pop: float, epsilon: float) -> None:
         self.graph = graph
         self.subsets = {node: {node} for node in graph}
@@ -170,7 +167,7 @@ def find_balanced_edge_cuts_memoization(
 
 
 def bipartition_tree(
-    graph: Union[Graph, Graph],
+    graph: Graph,
     pop_col: str,
     pop_target: float,
     epsilon: float,
