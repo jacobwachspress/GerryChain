@@ -3,17 +3,24 @@ from networkx.algorithms import tree
 
 from .random import random
 from collections import deque, namedtuple
+from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from gerrychain.graph.graph import Graph
+    from networkx.classes.graph import Graph
 
 
-def predecessors(h, root):
+def predecessors(h: Union[Graph, Graph], root: Union[int, Tuple[int, int]]
+                 ) -> Union[Dict[int, int], Dict[Tuple[int, int], Tuple[int, int]]]:
     return {a: b for a, b in nx.bfs_predecessors(h, root)}
 
 
-def successors(h, root):
+def successors(h: Union[Graph, Graph], root: Union[int, Tuple[int, int]]
+               ) -> Union[Dict[Tuple[int, int], List[Tuple[int, int]]], Dict[int, List[int]]]:
     return {a: b for a, b in nx.bfs_successors(h, root)}
 
 
-def random_spanning_tree(graph):
+def random_spanning_tree(graph: Union[Graph, Graph]) -> Union[Graph, Graph]:
     """ Builds a spanning tree chosen by Kruskal's method using random weights.
         :param graph: Networkx Graph
 
@@ -63,7 +70,8 @@ def uniform_spanning_tree(graph, choice=random.choice):
 
 
 class PopulatedGraph:
-    def __init__(self, graph, populations, ideal_pop, epsilon):
+    def __init__(self, graph: Union[Graph, Graph], populations: Union[Dict[Tuple[int,
+                 int], int], Dict[int, int]], ideal_pop: float, epsilon: float) -> None:
         self.graph = graph
         self.subsets = {node: {node} for node in graph}
         self.population = populations.copy()
@@ -75,15 +83,15 @@ class PopulatedGraph:
     def __iter__(self):
         return iter(self.graph)
 
-    def degree(self, node):
+    def degree(self, node: Union[int, Tuple[int, int]]) -> int:
         return self._degrees[node]
 
-    def contract_node(self, node, parent):
+    def contract_node(self, node: int, parent: int) -> None:
         self.population[parent] += self.population[node]
         self.subsets[parent] |= self.subsets[node]
         self._degrees[parent] -= 1
 
-    def has_ideal_population(self, node):
+    def has_ideal_population(self, node: int) -> bool:
         return (
             abs(self.population[node] - self.ideal_pop) < self.epsilon * self.ideal_pop
         )
@@ -92,7 +100,8 @@ class PopulatedGraph:
 Cut = namedtuple("Cut", "edge subset")
 
 
-def find_balanced_edge_cuts_contraction(h, choice=random.choice):
+def find_balanced_edge_cuts_contraction(
+        h: PopulatedGraph, choice: Callable = random.choice) -> List[Cut]:
     # this used to be greater than 2 but failed on small grids:(
     root = choice([x for x in h if h.degree(x) > 1])
     # BFS predecessors for iteratively contracting leaves
@@ -112,7 +121,8 @@ def find_balanced_edge_cuts_contraction(h, choice=random.choice):
     return cuts
 
 
-def find_balanced_edge_cuts_memoization(h, choice=random.choice):
+def find_balanced_edge_cuts_memoization(
+        h: PopulatedGraph, choice: Callable = random.choice) -> List[Union[Any, Cut]]:
     root = choice([x for x in h if h.degree(x) > 1])
     pred = predecessors(h.graph, root)
     succ = successors(h.graph, root)
@@ -160,16 +170,16 @@ def find_balanced_edge_cuts_memoization(h, choice=random.choice):
 
 
 def bipartition_tree(
-    graph,
-    pop_col,
-    pop_target,
-    epsilon,
-    node_repeats=1,
-    spanning_tree=None,
-    spanning_tree_fn=random_spanning_tree,
-    balance_edge_fn=find_balanced_edge_cuts_memoization,
-    choice=random.choice
-):
+    graph: Union[Graph, Graph],
+    pop_col: str,
+    pop_target: float,
+    epsilon: float,
+    node_repeats: int = 1,
+    spanning_tree: Optional[Graph] = None,
+    spanning_tree_fn: Callable = random_spanning_tree,
+    balance_edge_fn: Callable = find_balanced_edge_cuts_memoization,
+    choice: Callable = random.choice
+) -> Union[Set[int], Set[Tuple[int, int]]]:
     """This function finds a balanced 2 partition of a graph by drawing a
     spanning tree and finding an edge to cut that leaves at most an epsilon
     imbalance between the populations of the parts. If a root fails, new roots
@@ -289,9 +299,21 @@ def bipartition_tree_random(
         return choice(possible_cuts).subset
 
 
-def recursive_tree_part(
-    graph, parts, pop_target, pop_col, epsilon, node_repeats=1, method=bipartition_tree
-):
+def recursive_tree_part(graph: Union[Graph,
+    Graph],
+    parts: Union[range,
+    Tuple[int,
+    int]],
+    pop_target: Union[float,
+    int],
+    pop_col: str,
+    epsilon: float,
+    node_repeats: int = 1,
+    method: Callable = bipartition_tree) -> Union[Dict[Tuple[int,
+    int],
+    int],
+    Dict[int,
+     int]]:
     """Uses :func:`~gerrychain.tree.bipartition_tree` recursively to partition a tree into
     ``len(parts)`` parts of population ``pop_target`` (within ``epsilon``). Can be used to
     generate initial seed plans or to implement ReCom-like "merge walk" proposals.
@@ -346,15 +368,15 @@ def recursive_tree_part(
 
 
 def get_seed_chunks(
-    graph,
-    num_chunks,
-    num_dists,
-    pop_target,
-    pop_col,
-    epsilon,
-    node_repeats=1,
-    method=bipartition_tree_random
-):
+    graph: Graph,
+    num_chunks: int,
+    num_dists: int,
+    pop_target: float,
+    pop_col: str,
+    epsilon: float,
+    node_repeats: int = 1,
+    method: Callable = bipartition_tree_random
+) -> List[List[int]]:
     """
     Helper function for recursive_seed_part. Partitions the graph into ``num_chunks`` chunks,
     balanced within new_epsilon <= ``epsilon`` of a balanced target population.
@@ -468,16 +490,16 @@ def get_max_prime_factor_less_than(
 
 
 def recursive_seed_part_inner(
-    graph,
-    num_dists,
-    pop_target,
-    pop_col,
-    epsilon,
-    method=bipartition_tree,
-    node_repeats=1,
-    n=None,
-    ceil=None,
-):
+    graph: Graph,
+    num_dists: int,
+    pop_target: float,
+    pop_col: str,
+    epsilon: float,
+    method: Callable = bipartition_tree,
+    node_repeats: int = 1,
+    n: Optional[int] = None,
+    ceil: None = None,
+) -> List[Set[int]]:
     """
     Inner function for recursive_seed_part.
     Returns a partition with ``num_dists`` districts balanced within ``epsilon`` of
@@ -579,16 +601,16 @@ def recursive_seed_part_inner(
 
 
 def recursive_seed_part(
-    graph,
-    parts,
-    pop_target,
-    pop_col,
-    epsilon,
-    method=bipartition_tree,
-    node_repeats=1,
-    n=None,
-    ceil=None
-):
+    graph: Graph,
+    parts: range,
+    pop_target: float,
+    pop_col: str,
+    epsilon: float,
+    method: Callable = bipartition_tree,
+    node_repeats: int = 1,
+    n: Optional[int] = None,
+    ceil: None = None
+) -> Dict[int, int]:
     """
     Returns a partition with ``num_dists`` districts balanced within ``epsilon`` of
     ``pop_target`` by recursively splitting graph using recursive_seed_part_inner.
