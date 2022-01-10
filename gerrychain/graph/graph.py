@@ -5,6 +5,7 @@ import warnings
 
 import geopandas as gp
 import networkx
+import retworkx
 from networkx.classes.function import frozen
 from networkx.readwrite import json_graph
 from shapely.ops import unary_union
@@ -343,7 +344,8 @@ class FrozenGraph:
     """
     __slots__ = [
         "graph",
-        "size"
+        "size",
+        "pygraph"
     ]
 
     def __init__(self, graph: Graph):
