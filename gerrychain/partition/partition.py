@@ -1,5 +1,4 @@
 import json
-import geopandas
 from ..updaters import compute_edge_flows, flows_from_changes, cut_edges
 from .assignment import get_assignment
 from .subgraphs import SubgraphView
@@ -142,6 +141,8 @@ class Partition:
         :param `**kwargs`: Additional arguments to pass to :meth:`geopandas.GeoDataFrame.plot`
             to adjust the plot.
         """
+        import geopandas
+
         if geometries is None:
             geometries = self.graph.geometry
 
